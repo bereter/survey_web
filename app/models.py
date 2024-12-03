@@ -1,7 +1,7 @@
 from app.db import Base
 from sqlalchemy.orm import Mapped, relationship, mapped_column
-from sqlalchemy import DateTime, TIMESTAMP, ForeignKey, String
-from datetime import datetime, timezone
+from sqlalchemy import ForeignKey, String, BigInteger, DateTime, TIMESTAMP
+from datetime import datetime
 
 
 class Admin(Base):
@@ -28,9 +28,10 @@ class Questionnaire(Base):
 
     title: Mapped[str] = mapped_column(String(128))
     description: Mapped[str]
-    date_start: Mapped[datetime] = mapped_column(default=datetime.now())
-    date_end: Mapped[datetime] = mapped_column(nullable=True)
+    date_start: Mapped[DateTime] = mapped_column(TIMESTAMP, default=datetime.now())
+    date_end: Mapped[DateTime] = mapped_column(TIMESTAMP, default=None, nullable=True)
     user: Mapped[int | None]
+    id_parent: Mapped[int | None] = mapped_column(BigInteger, default=None)
 
     questions: Mapped[list['Question']] = relationship(back_populates='questionnaire')
 

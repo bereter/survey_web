@@ -1,8 +1,8 @@
-"""time
+"""create table
 
-Revision ID: 877021d69a35
+Revision ID: 02e73aaff6de
 Revises: 
-Create Date: 2024-11-30 20:03:20.105335
+Create Date: 2024-12-03 19:18:07.620243
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '877021d69a35'
+revision: str = '02e73aaff6de'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,9 +33,10 @@ def upgrade() -> None:
     op.create_table('questionnaires',
     sa.Column('title', sa.String(length=128), nullable=False),
     sa.Column('description', sa.String(), nullable=False),
-    sa.Column('date_start', sa.DateTime(), nullable=False),
-    sa.Column('date_end', sa.DateTime(), nullable=True),
+    sa.Column('date_start', sa.TIMESTAMP(), nullable=False),
+    sa.Column('date_end', sa.TIMESTAMP(), nullable=True),
     sa.Column('user', sa.Integer(), nullable=True),
+    sa.Column('id_parent', sa.BigInteger(), nullable=True),
     sa.Column('admin_id', sa.BigInteger(), nullable=False),
     sa.Column('id', sa.BigInteger(), sa.Identity(always=False), nullable=False),
     sa.ForeignKeyConstraint(['admin_id'], ['admins.id'], ondelete='CASCADE'),
