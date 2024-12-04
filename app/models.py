@@ -13,7 +13,7 @@ class Admin(Base):
     datetime: Mapped[DateTime] = mapped_column(TIMESTAMP, default=datetime.now())
     verification_email: Mapped[bool] = mapped_column(default=False)
 
-    questionnaires: Mapped[list['Questionnaire']] = relationship(back_populates='admin')
+    questionnaires: Mapped[list['Questionnaire']] = relationship(back_populates='admin', cascade='all, delete-orphan')
 
 
     def __str__(self):
@@ -33,7 +33,7 @@ class Questionnaire(Base):
     user: Mapped[int | None]
     id_parent: Mapped[int | None] = mapped_column(BigInteger, default=None)
 
-    questions: Mapped[list['Question']] = relationship(back_populates='questionnaire')
+    questions: Mapped[list['Question']] = relationship(back_populates='questionnaire', cascade='all, delete-orphan')
 
     admin_id: Mapped[int] = mapped_column(ForeignKey('admins.id', ondelete='CASCADE'))
     admin: Mapped['Admin'] = relationship(back_populates='questionnaires')
@@ -55,8 +55,8 @@ class Question(Base):
     questionnaire_id: Mapped[int] = mapped_column(ForeignKey('questionnaires.id', ondelete='CASCADE'))
     questionnaire: Mapped['Questionnaire'] = relationship(back_populates='questions')
 
-    admin_answer_list: Mapped[list['AnswerAdmin']] = relationship(back_populates='question_admin')
-    user_answer_list: Mapped[list['AnswerUser']] = relationship(back_populates='question_user')
+    admin_answer_list: Mapped[list['AnswerAdmin']] = relationship(back_populates='question_admin', cascade='all, delete-orphan')
+    user_answer_list: Mapped[list['AnswerUser']] = relationship(back_populates='question_user', cascade='all, delete-orphan')
 
     def __str__(self):
         return f'{self.__class__.__name__} (id={self.id}, questionnaire={self.questionnaire.title})'
