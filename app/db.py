@@ -6,12 +6,6 @@ from typing import AsyncGenerator
 
 
 DATABASE_URL = get_db_url
-# engine = create_async_engine(DATABASE_URL, echo=True)
-# async_session_maker = async_sessionmaker(
-#     bind=engine,
-#     autocommit=False,
-#     )
-
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -52,7 +46,7 @@ class DatabaseHelper:
 
 
 db_halper = DatabaseHelper(
-    url=get_db_url,
+    url=DATABASE_URL,
     echo=True,
     echo_pool=False,
     max_overflow=20,

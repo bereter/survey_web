@@ -2,7 +2,7 @@ from fastapi import FastAPI, APIRouter
 from api_v1.views import router_questionnaire, router_admin
 import uvicorn
 
-app = FastAPI()
+app = FastAPI(title='Проект Опросник')
 
 router = APIRouter()
 
