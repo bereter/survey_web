@@ -23,6 +23,11 @@ class AdminUpdate(BaseModel):
     password: str | None = None
 
 
+class AdminAuthorization(BaseModel):
+    user_email: EmailStr
+    password: str
+
+
 class Answer(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     text: str

@@ -18,6 +18,11 @@ class AdminCRUD:
         result = await session.execute(query)
         return result.scalars().all()
 
+    @classmethod
+    async def search_by_email(cls, session, user_email: str) -> model | None:
+        query = select(cls.model).filter_by(user_email=user_email)
+        result = await session.execute(query)
+        return result.scalars().one_or_none()
 
     @classmethod
     async def get_obj(cls, id_obj: int, session) -> model | None:
@@ -31,14 +36,12 @@ class AdminCRUD:
         await session.commit()
         return db
 
-
     @classmethod
     async def update_obj(cls, obj_model: model, update_model: schemas_update, session) -> model:
         for name, value in update_model.model_dump(exclude_unset=True).items():
             setattr(obj_model, name, value)
         await session.commit()
         return obj_model
-
 
     @classmethod
     async def delete_obj(cls, model_obj: model, session) -> bool:
@@ -53,7 +56,6 @@ class QuestionnaireCRUD(AdminCRUD):
     schemas_return = schemas.Questionnaire
     schemas_update = schemas.QuestionnaireUpdate
 
-
     @classmethod
     async def create_obj(cls, items: schemas_create, session) -> model:
         items.date_end = None
@@ -65,9 +67,8 @@ class QuestionnaireCRUD(AdminCRUD):
         await session.commit()
         return db
 
-
     @classmethod
-    async def get_obj(cls, id_obj: int, session, limit: int = 10, offset: int = 0):
+    async def get_obj(cls, id_obj: int, session, limit: int = 10, offset: int = 0) -> model | None:
         query = (
             select(cls.model)
             .filter_by(id=id_obj)
