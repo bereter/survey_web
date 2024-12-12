@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict, NaiveDatetime
 from datetime import datetime
 from app.config import QuestionType
 
@@ -45,14 +45,13 @@ class AnswerUpdate(BaseModel):
 class QuestionCreate(BaseModel):
     question_text: str
     question_type: QuestionType
-    user_answer_text: str | None
     questionnaire_id: int
 
 
 class Question(QuestionCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    question_type: str
+    user_answer_text: str | None
 
 
 class QuestionAllAnswer(Question):
@@ -68,16 +67,16 @@ class QuestionUpdate(BaseModel):
 class QuestionnaireCreate(BaseModel):
     title: str
     description: str
-    date_end: datetime | None
-    user: int | None
+    date_end: NaiveDatetime | None
     admin_id: int
 
 
 class QuestionnaireAllQuestions(QuestionnaireCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    id_parent: int| None
+    id_parent: int | None
     date_start: datetime
+    user: int | None
     questions: list[Question] = []
 
 
@@ -85,6 +84,7 @@ class Questionnaire(QuestionnaireCreate):
     model_config = ConfigDict(from_attributes=True)
     id: int
     id_parent: int| None
+    user: int | None
     date_start: datetime
 
 

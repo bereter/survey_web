@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Form, Body, status, Depends, HTTPException, Response, Request
+from fastapi import APIRouter, Form, Body, status, Depends, HTTPException, Response, Request, Query
 from .crud import AdminCRUD, QuestionnaireCRUD, QuestionCRUD, AnswerAdminCRUD, AnswerUserCRUD
 from . import schemas
 from app.config import QuestionType, UserOrAdmin, COOKIE_NAME
@@ -9,8 +9,79 @@ from fastapi.security import APIKeyCookie
 from security import verify_password_hash, create_access_token, password_hash, verify_token
 
 oauth2_cookie = APIKeyCookie(name=COOKIE_NAME)
-router_admin = APIRouter(prefix='/admin', tags=['Работа с админами'])
-router_questionnaire = APIRouter(prefix='/questionnaire', tags=['Работа с опросами'])
+router_questionnaire_user = APIRouter(prefix='/questionnaire_user', tags=['Прохождение опросов для юзеров'])
+router_admin = APIRouter(prefix='/admin', tags=['Регистрация и авторизация админов'])
+router_questionnaire_admin = APIRouter(prefix='/questionnaire_admin', tags=['Создание и редактирование опросов админами'])
+
+
+@router_questionnaire_user.get('/')
+async def get_all_questionnaires_user(
+        session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
+        user_id: Annotated[int, Query()] | None = None
+) -> list[schemas.Questionnaire] | None:
+    """
+    Получение списка опросов, актуальные для пользователя и пройденные пользователем
+    """
+    if user_id:
+        return await QuestionnaireCRUD.all_data(session=session, user_id=user_id)
+    else:
+        return await QuestionnaireCRUD.all_data(session=session)
+
+
+@router_questionnaire_user.get('/{id_questionnaire}/')
+async def get_questionnaire_user(
+        id_questionnaire: int,
+        session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
+) -> schemas.QuestionnaireAllQuestions:
+    """
+    Получение опроса по id
+    """
+    questionnaire = await QuestionnaireCRUD.get_obj(id_obj=id_questionnaire, session=session)
+    if questionnaire:
+        return questionnaire
+    else:
+        raise HTTPException(status_code=404, detail='NOT FOUND!')
+
+
+@router_questionnaire_user.post('/')
+async def create_questionnaire_user(
+        id_obj: Annotated[int, Body()],
+        id_user: Annotated[int, Body()],
+        session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
+) -> schemas.Questionnaire:
+    """
+     Создание опроса, для юзера
+    """
+    questionnaire_obj = await QuestionnaireCRUD.get_obj(id_obj=id_obj, session=session)
+    return await QuestionnaireCRUD.create_obj_user(obj_model=questionnaire_obj, id_user=id_user, session=session)
+
+
+@router_questionnaire_user.post('/question/')
+async def create_question_user(
+        id_questionnaire: Annotated[int, Body()],
+        id_question: Annotated[int, Body()],
+        id_user: Annotated[int, Body()],
+        user_text: Annotated[str, Body()],
+        session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
+):
+    """
+     Ответ на вопрос от юзера
+    """
+    questionnaire_obj = await QuestionnaireCRUD.get_obj(id_obj=id_questionnaire, user_id=id_user, session=session)
+    if questionnaire_obj:
+        question_obj = await QuestionCRUD.get_obj(id_obj=id_question, session=session)
+        obj = await QuestionCRUD.create_obj_user(
+            obj_model=question_obj,
+            id_questionnaire=id_questionnaire,
+            user_answer_text=user_text,
+            session=session
+        )
+        if obj:
+            return status.HTTP_200_OK
+        else:
+            raise HTTPException(status_code=404, detail='NOT FOUND!')
+    else:
+        raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_admin.get('/')
@@ -122,37 +193,80 @@ async def delete_admin(
         return status.HTTP_404_NOT_FOUND
 
 
-@router_questionnaire.get('/{id_questionnaire}/')
-async def get_questionnaire(
+# @router_questionnaire_admin.get('/all/')
+# async def get_questionnaire_admin(
+#         session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
+#         cookie: Annotated[str, Depends(oauth2_cookie)]
+# ):
+#     """
+#     Получение всех опросников всех юзеров
+#     """
+#     payload = await verify_token(token=cookie)
+#
+#     if payload:
+#         return await QuestionnaireCRUD.all_data(session=session, all_questionnaire_users=True)
+
+
+@router_questionnaire_admin.get('/{id_questionnaire}/')
+async def get_questionnaire_admin(
         id_questionnaire: int,
-        session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
-) -> schemas.QuestionnaireAllQuestions | None:
-    """
-    Получение опроса по id
-    """
-    return await QuestionnaireCRUD.get_obj(id_obj=id_questionnaire, session=session)
-
-
-@router_questionnaire.post('/')
-async def create_questionnaire(
-        items: schemas.QuestionnaireCreate,
         session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
         cookie: Annotated[str, Depends(oauth2_cookie)]
-) -> schemas.Questionnaire:
+) -> schemas.QuestionnaireAllQuestions:
     """
-     Создание опроса, для админа
+    Получение опроса админа по id
     """
     payload = await verify_token(token=cookie)
+
     if payload:
-        if items.admin_id == payload.get('id'):
-            return await QuestionnaireCRUD.create_obj(items=items, session=session)
+        admin_id = payload.get('id')
+        questionnaire = await QuestionnaireCRUD.get_obj(id_obj=id_questionnaire, session=session, admin_id=admin_id)
+        if questionnaire:
+            return questionnaire
         else:
             raise HTTPException(status_code=404, detail='NOT FOUND!')
     else:
         raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
-@router_questionnaire.patch('/{id_questionnaire}/')
+@router_questionnaire_admin.get('/')
+async def get_all_questionnaires_admin(
+        session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
+        cookie: Annotated[str, Depends(oauth2_cookie)]
+) -> list[schemas.Questionnaire] | None:
+    """
+    Получение списка опросов админа
+    """
+    payload = await verify_token(token=cookie)
+    if payload:
+        admin_id = payload.get('id')
+        return await QuestionnaireCRUD.all_data(session=session, admin_id=admin_id)
+    else:
+        raise HTTPException(status_code=404, detail='NOT FOUND!')
+
+
+@router_questionnaire_admin.post('/')
+async def create_questionnaire_admin(
+        items: schemas.QuestionnaireCreate,
+        session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
+        cookie: Annotated[str, Depends(oauth2_cookie)]
+) -> schemas.Questionnaire:
+    """
+     Создание опроса, для админа
+
+     Очень важно передавать дату окончания опроса без часового пояса(TimeZone)!!!
+    """
+    payload = await verify_token(token=cookie)
+    if payload:
+        if items.admin_id == payload.get('id'):
+            return await QuestionnaireCRUD.create_obj(items=items, session=session, admin=True)
+        else:
+            raise HTTPException(status_code=404, detail='NOT FOUND!')
+    else:
+        raise HTTPException(status_code=404, detail='NOT FOUND!')
+
+
+@router_questionnaire_admin.patch('/{id_questionnaire}/')
 async def update_questionnaire(
         id_questionnaire: int,
         items: schemas.QuestionnaireUpdate,
@@ -173,7 +287,7 @@ async def update_questionnaire(
         raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
-@router_questionnaire.delete('/{id_questionnaire}/')
+@router_questionnaire_admin.delete('/{id_questionnaire}/')
 async def delete_questionnaire(
         id_questionnaire: int,
         session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
@@ -195,18 +309,22 @@ async def delete_questionnaire(
         raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
-@router_questionnaire.get('/question/{id_question}/')
-async def get_question(
-        id_question: int,
-        session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
-) -> schemas.QuestionAllAnswer | None:
-    """
-    Получение вопроса по id
-    """
-    return await QuestionCRUD.get_obj(id_obj=id_question, session=session)
+# @router_questionnaire_admin.get('/question/{id_question}/')
+# async def get_question(
+#         id_question: int,
+#         session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
+# ) -> schemas.QuestionAllAnswer | None:
+#     """
+#     Получение вопроса по id
+#     """
+#     question = await QuestionCRUD.get_obj(id_obj=id_question, session=session)
+#     if question:
+#         return question
+#     else:
+#         raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
-@router_questionnaire.post('/question/')
+@router_questionnaire_admin.post('/question/')
 async def create_question(
         items: schemas.QuestionCreate,
         session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
@@ -229,7 +347,7 @@ async def create_question(
         raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
-@router_questionnaire.patch('/question/{id_question}/')
+@router_questionnaire_admin.patch('/question/{id_question}/')
 async def update_question(
         id_question: int,
         items: schemas.QuestionUpdate,
@@ -254,7 +372,7 @@ async def update_question(
         raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
-@router_questionnaire.delete('/question/{id_question}/')
+@router_questionnaire_admin.delete('/question/{id_question}/')
 async def delete_question(
         id_question: int,
         session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
@@ -280,7 +398,7 @@ async def delete_question(
         raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
-@router_questionnaire.post('/question/answer/')
+@router_questionnaire_admin.post('/question/answer/')
 async def create_answer(
         items: schemas.Answer,
         user_or_admin: UserOrAdmin,
@@ -307,7 +425,7 @@ async def create_answer(
         return status.HTTP_400_BAD_REQUEST
 
 
-@router_questionnaire.patch('/question/answer/{id_answer}/')
+@router_questionnaire_admin.patch('/question/answer/{id_answer}/')
 async def update_answer(
         id_answer: int,
         items: schemas.AnswerUpdate,
@@ -332,7 +450,7 @@ async def update_answer(
             return status.HTTP_404_NOT_FOUND
 
 
-@router_questionnaire.delete('/question/answer/{id_answer}/')
+@router_questionnaire_admin.delete('/question/answer/{id_answer}/')
 async def delete_answer(
         id_answer: int,
         user_or_admin: UserOrAdmin,
