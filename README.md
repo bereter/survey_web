@@ -11,6 +11,7 @@
 ```
 DB_POSTGRES=postgresql+asyncpg://"имя пользователя":"пароль"@"хост":"порт"/"имя базы данных"
 DB_POSTGRES_ALEMBIC=postgresql://"имя пользователя":"пароль"@"хост":"порт"/"имя базы данных"
+JWT_SECRET_KEY="Секретный ключ"
 ```
 
 И наконец применить миграции. Для этого, находясь в папке `survey_web_api` , необходимо прописать в терминале команду `alembic upgrade head`
@@ -31,6 +32,7 @@ DB_POSTGRES_ALEMBIC=postgresql://"имя пользователя":"пароль
 ```
 DB_POSTGRES=postgresql+asyncpg://postgres:postgres@db:5432/postgres
 DB_POSTGRES_ALEMBIC=postgresql://postgres:postgres@db:5432/postgres
+JWT_SECRET_KEY="Секретный ключ"
 ```
 
 ### Запуск
