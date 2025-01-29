@@ -1,13 +1,13 @@
-from api_v1.admin.crud import AdminCRUD
 from . import schemas
 from app.models import Questionnaire
 from datetime import datetime
 from sqlalchemy.engine import Result
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select
+from api_v1.crud_basic import SampleCRUD
 
 
-class QuestionnaireCRUD(AdminCRUD):
+class QuestionnaireCRUD(SampleCRUD):
     model = Questionnaire
     schemas_create = schemas.QuestionnaireCreate
     schemas_return = schemas.Questionnaire

@@ -32,10 +32,8 @@ async def get_questionnaire_admin(
         questionnaire = await QuestionnaireCRUD.get_obj(id_obj=id_questionnaire, session=session, admin_id=admin_id)
         if questionnaire:
             return questionnaire
-        else:
-            raise HTTPException(status_code=404, detail='NOT FOUND!')
-    else:
         raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_questionnaire_admin.get('/')
@@ -50,8 +48,7 @@ async def get_all_questionnaires_admin(
     if payload:
         admin_id = payload.get('id')
         return await QuestionnaireCRUD.all_data(session=session, admin_id=admin_id)
-    else:
-        raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_questionnaire_admin.post('/')
@@ -69,10 +66,8 @@ async def create_questionnaire_admin(
     if payload:
         if items.admin_id == payload.get('id'):
             return await QuestionnaireCRUD.create_obj(items=items, session=session, admin=True)
-        else:
-            raise HTTPException(status_code=404, detail='NOT FOUND!')
-    else:
         raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_questionnaire_admin.patch('/{id_questionnaire}/')
@@ -90,10 +85,8 @@ async def update_questionnaire(
     if payload and obj_update:
         if obj_update.admin_id == payload.get('id'):
             return await QuestionnaireCRUD.update_obj(obj_model=obj_update, update_model=items, session=session)
-        else:
-            raise HTTPException(status_code=404, detail='NOT FOUND!')
-    else:
         raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_questionnaire_admin.delete('/{id_questionnaire}/')
@@ -112,10 +105,8 @@ async def delete_questionnaire(
             return_bool = await QuestionnaireCRUD.delete_obj(model_obj=obj_delete, session=session)
             status_http = status.HTTP_200_OK if return_bool else status.HTTP_500_INTERNAL_SERVER_ERROR
             return status_http
-        else:
-            raise HTTPException(status_code=404, detail='NOT FOUND!')
-    else:
         raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 # @router_questionnaire_admin.get('/question/{id_question}/')
@@ -150,10 +141,8 @@ async def create_question(
     if payload and questionnaire:
         if payload.get('id') == questionnaire.admin_id:
             return await QuestionCRUD.create_obj(items=items, session=session)
-        else:
-            raise HTTPException(status_code=404, detail='NOT FOUND!')
-    else:
         raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_questionnaire_admin.patch('/question/{id_question}/')
@@ -173,12 +162,9 @@ async def update_question(
         if payload and questionnaire and question:
             if payload.get('id') == questionnaire.admin_id:
                 return await QuestionCRUD.update_obj(obj_model=question, update_model=items, session=session)
-            else:
-                raise HTTPException(status_code=404, detail='NOT FOUND!')
-        else:
             raise HTTPException(status_code=404, detail='NOT FOUND!')
-    else:
         raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_questionnaire_admin.delete('/question/{id_question}/')
@@ -199,12 +185,9 @@ async def delete_question(
                 return_bool = await QuestionCRUD.delete_obj(model_obj=question, session=session)
                 status_http = status.HTTP_200_OK if return_bool else status.HTTP_500_INTERNAL_SERVER_ERROR
                 return status_http
-            else:
-                raise HTTPException(status_code=404, detail='NOT FOUND!')
-        else:
             raise HTTPException(status_code=404, detail='NOT FOUND!')
-    else:
         raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_questionnaire_admin.post('/question/answer/')
@@ -221,17 +204,14 @@ async def create_answer(
         answer = await AnswerUserCRUD.create_obj(items=items, session=session)
         if answer:
             return status.HTTP_201_CREATED
-        else:
-            return status.HTTP_500_INTERNAL_SERVER_ERROR
+        return status.HTTP_500_INTERNAL_SERVER_ERROR
 
     elif user_or_admin == 'admin':
         answer = await AnswerAdminCRUD.create_obj(items=items, session=session)
         if answer:
             return status.HTTP_201_CREATED
-        else:
-            return status.HTTP_500_INTERNAL_SERVER_ERROR
-    else:
-        return status.HTTP_400_BAD_REQUEST
+        return status.HTTP_500_INTERNAL_SERVER_ERROR
+    return status.HTTP_400_BAD_REQUEST
 
 
 @router_questionnaire_admin.patch('/question/answer/{id_answer}/')
@@ -248,15 +228,13 @@ async def update_answer(
         answer = await AnswerUserCRUD.get_obj(id_obj=id_answer, session=session)
         if answer:
             return await AnswerUserCRUD.update_obj(obj_model=answer, update_model=items, session=session)
-        else:
-            return status.HTTP_404_NOT_FOUND
+        return status.HTTP_404_NOT_FOUND
 
     elif user_or_admin == 'admin':
         answer = await AnswerAdminCRUD.get_obj(id_obj=id_answer, session=session)
         if answer:
             return await AnswerAdminCRUD.update_obj(obj_model=answer, update_model=items, session=session)
-        else:
-            return status.HTTP_404_NOT_FOUND
+        return status.HTTP_404_NOT_FOUND
 
 
 @router_questionnaire_admin.delete('/question/answer/{id_answer}/')
@@ -274,8 +252,7 @@ async def delete_answer(
             return_bool = await AnswerUserCRUD.delete_obj(model_obj=answer, session=session)
             if return_bool:
                 return status.HTTP_200_OK
-            else:
-                return status.HTTP_500_INTERNAL_SERVER_ERROR
+            return status.HTTP_500_INTERNAL_SERVER_ERROR
 
     if user_or_admin == 'admin':
         answer = await AnswerAdminCRUD.get_obj(id_obj=id_answer, session=session)
@@ -283,5 +260,4 @@ async def delete_answer(
             return_bool = await AnswerAdminCRUD.delete_obj(model_obj=answer, session=session)
             if return_bool:
                 return status.HTTP_200_OK
-            else:
-                return status.HTTP_500_INTERNAL_SERVER_ERROR
+            return status.HTTP_500_INTERNAL_SERVER_ERROR

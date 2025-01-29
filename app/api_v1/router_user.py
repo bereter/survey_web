@@ -28,16 +28,30 @@ async def get_all_questionnaires_user(
 @router_questionnaire_user.get('/{id_questionnaire}/')
 async def get_questionnaire_user(
         id_questionnaire: int,
-        session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
+        session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
+        user_id: Annotated[int, Query()] | None = None
 ) -> schemas_questionnaire.QuestionnaireAllQuestions:
     """
     Получение опроса по id для юзера
     """
-    questionnaire = await QuestionnaireCRUD.get_obj(id_obj=id_questionnaire, session=session)
+    questionnaire = await QuestionnaireCRUD.get_obj(id_obj=id_questionnaire, session=session, user_id=user_id)
     if questionnaire:
         return questionnaire
-    else:
-        raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
+
+
+@router_questionnaire_user.get('/question/{id_question}/')
+async def get_question_user(
+        id_question: int,
+        session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
+) -> schemas_question.QuestionAllAnswer:
+    """
+    Получение вопроса по id для юзера
+    """
+    question = await QuestionCRUD.get_obj(id_obj=id_question, session=session)
+    if question:
+        return question
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_questionnaire_user.post('/')
@@ -53,13 +67,13 @@ async def create_questionnaire_user(
     return await QuestionnaireCRUD.create_obj_user(obj_model=questionnaire_obj, id_user=id_user, session=session)
 
 
-@router_questionnaire_user.post('/question/')
+@router_questionnaire_user.post('/question/{id_question}/')
 async def create_question_user(
+        id_question: int,
         id_questionnaire: Annotated[int, Body()],
-        id_question: Annotated[int, Body()],
         id_user: Annotated[int, Body()],
-        user_text: Annotated[str, Body()],
-        session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
+        session: Annotated[AsyncSession, Depends(db_halper.session_getter)],
+        user_text: Annotated[str, Body()] | None = None
 ):
     """
      Ответ на вопрос от юзера
@@ -75,7 +89,25 @@ async def create_question_user(
         )
         if obj:
             return status.HTTP_200_OK
-        else:
-            raise HTTPException(status_code=404, detail='NOT FOUND!')
-    else:
+
         raise HTTPException(status_code=404, detail='NOT FOUND!')
+
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
+
+
+# @router_questionnaire_user.post('/question/{id_question}/answer/{id_answer}/')
+# async def create_answer_user(
+#         id_question: int,
+#         id_answer: int,
+#         session: Annotated[AsyncSession, Depends(db_halper.session_getter)]
+# ):
+#
+#     """
+#     Создание вариантов ответов для юзера
+#     """
+#
+#     # question_obj = await QuestionCRUD.get_obj(id_obj=id_question, session=session)
+#
+#     answer_obj = await AnswerAdminCRUD.get_obj(id_obj=id_answer, session=session)
+#     items = {'text': f'{answer_obj.text}', 'question_id': id_question}
+#     create_obj = await AnswerUserCRUD.create_obj(items=items, session=session)

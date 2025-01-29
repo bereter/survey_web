@@ -42,10 +42,8 @@ async def authorization_admin(
                 httponly=True
             )
             return admin
-        else:
-            raise HTTPException(status_code=400, detail='Incorrect email or password')
-    else:
         raise HTTPException(status_code=400, detail='Incorrect email or password')
+    raise HTTPException(status_code=400, detail='Incorrect email or password')
 
 
 @router_admin.post('/registration/')
@@ -89,10 +87,8 @@ async def update_admin(
         admin = await AdminCRUD.get_obj(id_obj=id_admin, session=session)
         if admin and admin.id == payload.get('id'):
             return await AdminCRUD.update_obj(obj_model=admin, update_model=items, session=session)
-        else:
-            raise HTTPException(status_code=404, detail='NOT FOUND!')
-    else:
         raise HTTPException(status_code=404, detail='NOT FOUND!')
+    raise HTTPException(status_code=404, detail='NOT FOUND!')
 
 
 @router_admin.delete('/{id_admin}/')
@@ -113,10 +109,7 @@ async def delete_admin(
             if return_bool:
                 response.delete_cookie(key=COOKIE_NAME)
                 return status.HTTP_200_OK
-            else:
-                return status.HTTP_500_INTERNAL_SERVER_ERROR
-        else:
-            return status.HTTP_404_NOT_FOUND
-    else:
+            return status.HTTP_500_INTERNAL_SERVER_ERROR
         return status.HTTP_404_NOT_FOUND
+    return status.HTTP_404_NOT_FOUND
 
