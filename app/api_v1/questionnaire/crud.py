@@ -4,10 +4,10 @@ from datetime import datetime
 from sqlalchemy.engine import Result
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select
-from api_v1.crud_basic import SampleCRUD
+from api_v1.crud_basic import BaseCRUD
 
 
-class QuestionnaireCRUD(SampleCRUD):
+class QuestionnaireCRUD(BaseCRUD):
     model = Questionnaire
     schemas_create = schemas.QuestionnaireCreate
     schemas_return = schemas.Questionnaire

@@ -1,10 +1,10 @@
 from sqlalchemy import select
 from app.models import Admin
 from . import schemas
-from api_v1.crud_basic import SampleCRUD
+from api_v1.crud_basic import BaseCRUD
 
 
-class AdminCRUD(SampleCRUD):
+class AdminCRUD(BaseCRUD):
     model = Admin
     schemas_create = schemas.AdminCreate
     schemas_return = schemas.Admin

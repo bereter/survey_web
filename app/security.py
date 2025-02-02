@@ -18,7 +18,7 @@ async def verify_password_hash(password, verify_password):
 
 
 # создание токена
-async def create_access_token(admin):
+async def create_jwt_token(admin):
     try:
         payload = {
             'id': admin.id,
@@ -33,7 +33,7 @@ async def create_access_token(admin):
 
 
 # расшифровка токена
-async def verify_token(token):
+async def verify_jwt_token(token):
     try:
         payload = jwt.decode(token, key=JWT_SECRET, algorithms='HS256')
         return payload

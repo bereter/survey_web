@@ -4,7 +4,7 @@ from app.db import Base
 from pydantic import BaseModel
 
 
-class SampleCRUD:
+class BaseCRUD:
     model: Any = Base
     schemas_create: Any = BaseModel
     schemas_return: Any = BaseModel

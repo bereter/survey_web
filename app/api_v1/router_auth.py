@@ -5,7 +5,7 @@ from api_v1.admin import schemas
 from app.config import COOKIE_NAME, oauth2_cookie
 from app.db import db_halper
 from sqlalchemy.ext.asyncio import AsyncSession
-from security import verify_password_hash, create_access_token, password_hash, verify_token
+from security import verify_password_hash, create_jwt_token, password_hash, verify_jwt_token
 
 
 router_admin = APIRouter(prefix='/admin', tags=['Регистрация и авторизация админов'])
@@ -35,7 +35,7 @@ async def authorization_admin(
     if admin:
         password_user = await verify_password_hash(password=items.password, verify_password=admin.password)
         if password_user:
-            token = await create_access_token(admin)
+            token = await create_jwt_token(admin)
             response.set_cookie(
                 key=COOKIE_NAME,
                 value=token,
@@ -63,7 +63,7 @@ async def create_admin(
         )
     items.password = await password_hash(items.password)
     new_admin = await AdminCRUD.create_obj(items=items, session=session)
-    token = await create_access_token(new_admin)
+    token = await create_jwt_token(new_admin)
     response.set_cookie(
         key=COOKIE_NAME,
         value=token,
@@ -82,7 +82,7 @@ async def update_admin(
     """
      Редактирование админа
     """
-    payload = await verify_token(token=cookie)
+    payload = await verify_jwt_token(token=cookie)
     if payload:
         admin = await AdminCRUD.get_obj(id_obj=id_admin, session=session)
         if admin and admin.id == payload.get('id'):
@@ -101,7 +101,7 @@ async def delete_admin(
     """
      Удаление админа
     """
-    payload = await verify_token(token=cookie)
+    payload = await verify_jwt_token(token=cookie)
     if payload:
         obj_delete = await AdminCRUD.get_obj(id_obj=id_admin, session=session)
         if obj_delete.id == payload.get('id'):

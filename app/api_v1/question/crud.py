@@ -3,10 +3,10 @@ from sqlalchemy.engine import Result
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select
 from app.models import Question, AnswerAdmin, AnswerUser
-from api_v1.crud_basic import SampleCRUD
+from api_v1.crud_basic import BaseCRUD
 
 
-class QuestionCRUD(SampleCRUD):
+class QuestionCRUD(BaseCRUD):
     model = Question
     schemas_create = schemas.QuestionCreate
     schemas_return = schemas.Question
@@ -43,7 +43,7 @@ class QuestionCRUD(SampleCRUD):
         return new_obj
 
 
-class AnswerAdminCRUD(SampleCRUD):
+class AnswerAdminCRUD(BaseCRUD):
     model = AnswerAdmin
     schemas_create = schemas.Answer
     schemas_return = schemas.Answer

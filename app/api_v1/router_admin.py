@@ -7,7 +7,7 @@ from api_v1.question import schemas as schemas_question
 from app.config import UserOrAdmin, oauth2_cookie
 from app.db import db_halper
 from sqlalchemy.ext.asyncio import AsyncSession
-from security import verify_token
+from security import verify_jwt_token
 
 
 router_questionnaire_admin = APIRouter(
